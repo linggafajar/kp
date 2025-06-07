@@ -18,7 +18,6 @@ export default function PeminjamanForm() {
   const [tglPinjam, setTglPinjam] = useState<Date | undefined>(undefined);
   const [tglKembali, setTglKembali] = useState<Date | undefined>(undefined);
 
-  // List barang dari API
   const [listBarang, setListBarang] = useState<{ id: number; nama: string; stok: number }[]>([]);
   const [selectedBarangId, setSelectedBarangId] = useState<number | null>(null);
 
@@ -39,7 +38,6 @@ export default function PeminjamanForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validasi
     if (!nama.trim()) return alert("Nama wajib diisi");
     if (!jabatan) return alert("Jabatan wajib dipilih");
     if (!keperluan.trim()) return alert("Keperluan wajib diisi");
@@ -48,6 +46,15 @@ export default function PeminjamanForm() {
     if (!tglPinjam) return alert("Tanggal peminjaman wajib dipilih");
     if (!tglKembali) return alert("Tanggal pengembalian wajib dipilih");
     if (tglKembali < tglPinjam) return alert("Tanggal pengembalian tidak boleh sebelum tanggal peminjaman");
+
+    // Ambil user dari localStorage
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const userId = user?.id;
+
+    if (!userId) {
+      alert("User tidak ditemukan. Silakan login ulang.");
+      return;
+    }
 
     const data = {
       nama: nama.trim(),
@@ -58,6 +65,7 @@ export default function PeminjamanForm() {
       jumlahBarang: Number(jumlah),
       tanggalPengajuan: format(tglPinjam, "yyyy-MM-dd"),
       tanggalPengembalian: format(tglKembali, "yyyy-MM-dd"),
+      userId,
     };
 
     try {
@@ -69,7 +77,6 @@ export default function PeminjamanForm() {
 
       if (res.ok) {
         alert("Peminjaman berhasil");
-        // Reset form
         setNama("");
         setJabatan("");
         setKelas("");
@@ -78,7 +85,6 @@ export default function PeminjamanForm() {
         setTglPinjam(undefined);
         setTglKembali(undefined);
 
-        // Reload list barang (stok terbaru)
         const resBarang = await fetch("/api/barang");
         const updatedBarang = await resBarang.json();
         setListBarang(updatedBarang);
