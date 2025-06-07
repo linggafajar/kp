@@ -10,17 +10,31 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 
 export default function PermintaanBarangForm() {
+  const [userId, setUserId] = useState<number | null>(null)
   const [nama, setNama] = useState("")
   const [jabatan, setJabatan] = useState("")
   const [kelas, setKelas] = useState("")
   const [keperluan, setKeperluan] = useState("")
   const [tanggal, setTanggal] = useState<Date | undefined>(new Date())
   const [jumlah, setJumlah] = useState<number | "">(0)
-
   const [listBarang, setListBarang] = useState<{ id: number; nama: string; stok: number }[]>([])
   const [selectedBarangId, setSelectedBarangId] = useState<number | null>(null)
 
   useEffect(() => {
+    // Ambil userId dari localStorage
+    const userString = localStorage.getItem("user")
+    if (userString) {
+      try {
+        const user = JSON.parse(userString)
+        if (user && user.id) {
+          setUserId(user.id)
+        }
+      } catch (err) {
+        console.error("Gagal parse user dari localStorage:", err)
+      }
+    }
+
+    // Ambil list barang dari API
     async function fetchBarang() {
       try {
         const res = await fetch("/api/barang")
@@ -31,11 +45,17 @@ export default function PermintaanBarangForm() {
         console.error("Gagal ambil data barang:", error)
       }
     }
+
     fetchBarang()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!userId) {
+      alert("User belum login")
+      return
+    }
 
     if (!selectedBarangId) {
       alert("Pilih barang terlebih dahulu")
@@ -48,6 +68,7 @@ export default function PermintaanBarangForm() {
     }
 
     const data = {
+      userId,
       nama,
       jabatan,
       kelas,
@@ -66,11 +87,10 @@ export default function PermintaanBarangForm() {
         body: JSON.stringify(data),
       })
 
-if (!res.ok) throw new Error("Gagal mengirim permintaan");
+      if (!res.ok) throw new Error("Gagal mengirim permintaan")
 
-console.log("Permintaan berhasil dikirim");
-
-
+      console.log("Permintaan berhasil dikirim")
+      alert("Permintaan berhasil dikirim")
 
       // Reset form
       setNama("")
